@@ -84,440 +84,7 @@ Sistema de gestão de mensalidades de futsal
             align-items: center;
             gap: 10px;
         }
-<script>
-    // ==================== CONFIGURAÇÕES ====================
-    const CONFIG = {
-        MONTHLY_FEE: 30,
-        GYM_RENT: 220
-    };
 
-    // ==================== ESTADO ====================
-    let currentDate = new Date();
-    let currentMonthKey = '';
-    let allData = {};
-
-    // ==================== INICIALIZAÇÃO ====================
-    function init() {
-        try {
-            // Carrega dados do localStorage
-            const savedData = localStorage.getItem('futsalData');
-            if (savedData) {
-                allData = JSON.parse(savedData);
-            }
-
-            // Define mês atual
-            currentMonthKey = getMonthKey(currentDate);
-            
-            // Inicializa mês se não existir
-            if (!allData[currentMonthKey]) {
-                allData[currentMonthKey] = {
-                    players: [],
-                    logs: []
-                };
-            }
-            
-            // Verifica se há jogadores copiados
-            checkCopiedPlayers();
-            updateMonthDisplay();
-            renderAll();
-        } catch (error) {
-            console.error('Erro na inicialização:', error);
-            showToast('Erro ao carregar dados', true);
-        }
-    }
-
-    function updateMonthDisplay() {
-        const monthName = getMonthName(currentDate.getMonth() + 1) + ' ' + currentDate.getFullYear();
-        document.getElementById('currentMonth').textContent = monthName;
-    }
-
-    function renderAll() {
-        renderDashboard();
-        renderPlayerList();
-        renderHistory();
-    }
-
-    function renderDashboard() {
-        const players = allData[currentMonthKey].players;
-        const total = players.length;
-        const paid = players.filter(p => p.paid).length;
-        const pending = total - paid;
-
-        document.getElementById('totalPlayers').textContent = total;
-        document.getElementById('paidPlayers').textContent = paid;
-        document.getElementById('pendingPlayers').textContent = pending;
-    }
-
-    function renderPlayerList() {
-        const list = document.getElementById('playerList');
-        const players = allData[currentMonthKey].players;
-
-        if (players.length === 0) {
-            list.innerHTML = 
-                '<div class="empty-state">' +
-                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
-                        '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>' +
-                        '<circle cx="9" cy="7" r="4"></circle>' +
-                        '<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>' +
-                        '<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>' +
-                    '</svg>' +
-                    '<p>Nenhum jogador cadastrado neste mês</p>' +
-                '</div>';
-            return;
-        }
-
-        list.innerHTML = players.map(player => {
-            const isCopied = player.copiedFrom ? true : false;
-            const cardClass = 'player-card ' + (player.paid ? 'paid' : '') + (isCopied ? ' copied' : '');
-            const statusText = player.paid 
-                ? 'Pago em ' + formatDate(player.lastPaymentDate)
-                : (isCopied ? 'Pendente (copiado)' : 'Pendente');
-            
-            return '<div class="' + cardClass + '">' +
-                '<div class="player-info">' +
-                    '<strong>' + escapeHtml(player.name) + '</strong>' +
-                    '<span class="status">' +
-                        '<span class="dot"></span>' +
-                        statusText +
-                    '</span>' +
-                '</div>' +
-                '<div class="player-actions">' +
-                    '<button class="btn ' + (player.paid ? 'btn-unpay' : 'btn-pay') + '" ' +
-                            'onclick="togglePayment(' + player.id + ')">' +
-                        (player.paid ? 'Desmarcar' : 'Pago R$ 30') +
-                    '</button>' +
-                    '<button class="btn btn-remove" onclick="removePlayer(' + player.id + ')">X</button>' +
-                '</div>' +
-            '</div>';
-        }).join('');
-    }
-
-    function renderHistory() {
-        const historyList = document.getElementById('historyList');
-        const sortedKeys = Object.keys(allData).sort().reverse();
-
-        if (sortedKeys.length === 0) {
-            historyList.innerHTML = '<div class="empty-state"><p>Nenhum histórico encontrado</p></div>';
-            return;
-        }
-
-        // Agrupar por ano e mês
-        const groupedByYear = {};
-        sortedKeys.forEach(key => {
-            const [year, month] = key.split('-');
-            if (!groupedByYear[year]) groupedByYear[year] = {};
-            groupedByYear[year][month] = key;
-        });
-
-        historyList.innerHTML = Object.keys(groupedByYear).sort().reverse().map(year => {
-            return Object.keys(groupedByYear[year]).sort().reverse().map(month => {
-                const key = groupedByYear[year][month];
-                const monthData = allData[key];
-                const paidCount = monthData.players.filter(p => p.paid).length;
-                const collected = paidCount * CONFIG.MONTHLY_FEE;
-                const profit = collected - CONFIG.GYM_RENT;
-                const isCurrentMonth = key === currentMonthKey;
-                const monthClass = isCurrentMonth ? 'current-month' : 'past-month';
-
-                return '<div class="month-group">' +
-                    '<div class="month-header" onclick="toggleMonthGroup(this)">' +
-                        '<span>' + getMonthName(parseInt(month)) + ' ' + year + (isCurrentMonth ? ' (Atual)' : '') + '</span>' +
-                        '<span class="history-stats">' +
-                            monthData.players.length + ' jogadores | ' + paidCount + ' pagos | ' +
-                            '<span class="' + (profit >= 0 ? 'history-profit' : 'history-loss ' + monthClass) + '">' +
-                                (profit >= 0 ? '+' : '') + 'R$ ' + profit +
-                            '</span>' +
-                        '</span>' +
-                    '</div>' +
-                    '<div class="month-content">' +
-                        (monthData.players.length > 0 ? monthData.players.map(player => {
-                            const status = player.paid ? 'Pago' : 'Pendente';
-                            return '<div class="history-item">' +
-                                '<div class="history-month">' + escapeHtml(player.name) + '</div>' +
-                                '<div class="history-stats">' + status + '</div>' +
-                            '</div>';
-                        }).join('') : '<div class="history-item">Nenhum jogador</div>') +
-                    '</div>' +
-                '</div>';
-            }).join('');
-        }).join('');
-    }
-
-    function toggleMonthGroup(header) {
-        const content = header.nextElementSibling;
-        content.classList.toggle('show');
-    }
-
-    function selectMonth(key) {
-        const [year, month] = key.split('-');
-        currentDate = new Date(parseInt(year), parseInt(month) - 1, 1);
-        currentMonthKey = key;
-        
-        if (!allData[currentMonthKey]) {
-            allData[currentMonthKey] = {
-                players: [],
-                logs: []
-            };
-        }
-        
-        checkCopiedPlayers();
-        updateMonthDisplay();
-        renderAll();
-    }
-
-    // ==================== AÇÕES DOS JOGADORES ====================
-    function addPlayer() {
-        const input = document.getElementById('playerName');
-        const name = input.value.trim();
-        
-        if (!name) {
-            showInputError();
-            return;
-        }
-        
-        // Verifica se já existe
-        const exists = allData[currentMonthKey].players.some(p => p.name.toLowerCase() === name.toLowerCase());
-        if (exists) {
-            showToast('Jogador já existe neste mês', true);
-            showInputError();
-            return;
-        }
-        
-        const player = {
-            id: Date.now(),
-            name: name,
-            paid: false,
-            lastPaymentDate: null,
-            copiedFrom: null
-        };
-        
-        allData[currentMonthKey].players.push(player);
-        addLog('Jogador adicionado: ' + name);
-        saveData();
-        renderAll();
-        
-        input.value = '';
-        showToast('Jogador adicionado com sucesso!');
-    }
-
-    function togglePayment(playerId) {
-        const player = allData[currentMonthKey].players.find(p => p.id === playerId);
-        if (!player) return;
-        
-        player.paid = !player.paid;
-        player.lastPaymentDate = player.paid ? new Date().toISOString() : null;
-        
-        addLog(player.name + ' ' + (player.paid ? 'pagou' : 'desmarcou pagamento'));
-        saveData();
-        renderAll();
-        
-        showToast(player.paid ? 'Pagamento confirmado!' : 'Pagamento desmarcado');
-    }
-
-    function removePlayer(playerId) {
-        const index = allData[currentMonthKey].players.findIndex(p => p.id === playerId);
-        if (index === -1) return;
-        
-        const player = allData[currentMonthKey].players[index];
-        allData[currentMonthKey].players.splice(index, 1);
-        
-        addLog('Jogador removido: ' + player.name);
-        saveData();
-        renderAll();
-        
-        showToast('Jogador removido');
-    }
-
-    // ==================== NAVEGAÇÃO DE MESES ====================
-    function navigateMonth(direction) {
-        currentDate.setMonth(currentDate.getMonth() + direction);
-        currentMonthKey = getMonthKey(currentDate);
-        
-        if (!allData[currentMonthKey]) {
-            allData[currentMonthKey] = {
-                players: [],
-                logs: []
-            };
-        }
-        
-        checkCopiedPlayers();
-        updateMonthDisplay();
-        renderAll();
-    }
-
-    function createNewMonth() {
-        const nextMonth = new Date(currentDate);
-        nextMonth.setMonth(nextMonth.getMonth() + 1);
-        const nextKey = getMonthKey(nextMonth);
-        
-        if (allData[nextKey]) {
-            showToast('Mês já existe', true);
-            return;
-        }
-        
-        allData[nextKey] = {
-            players: [],
-            logs: []
-        };
-        
-        addLog('Novo mês criado: ' + getMonthName(nextMonth.getMonth() + 1) + ' ' + nextMonth.getFullYear());
-        saveData();
-        
-        // Navega para o novo mês
-        currentDate = nextMonth;
-        currentMonthKey = nextKey;
-        updateMonthDisplay();
-        renderAll();
-        
-        showToast('Novo mês criado!');
-    }
-
-    function copyPlayersFromPreviousMonth() {
-        const prevMonth = new Date(currentDate);
-        prevMonth.setMonth(prevMonth.getMonth() - 1);
-        const prevKey = getMonthKey(prevMonth);
-        
-        if (!allData[prevKey] || allData[prevKey].players.length === 0) {
-            showToast('Nenhum jogador no mês anterior', true);
-            return;
-        }
-        
-        const copiedPlayers = allData[prevKey].players.map(player => ({
-            id: Date.now() + Math.random(),
-            name: player.name,
-            paid: false,
-            lastPaymentDate: null,
-            copiedFrom: prevKey
-        }));
-        
-        allData[currentMonthKey].players = copiedPlayers;
-        addLog('Jogadores copiados do mês anterior');
-        saveData();
-        renderAll();
-        
-        showToast('Jogadores copiados com sucesso!');
-    }
-
-    function checkCopiedPlayers() {
-        const players = allData[currentMonthKey].players;
-        players.forEach(player => {
-            if (player.copiedFrom) {
-                const originalMonth = allData[player.copiedFrom];
-                if (!originalMonth || !originalMonth.players.some(p => p.name === player.name)) {
-                    // Remove se o original foi deletado
-                    const index = players.indexOf(player);
-                    if (index > -1) players.splice(index, 1);
-                }
-            }
-        });
-    }
-
-    // ==================== LOGS ====================
-    function addLog(message) {
-        const log = {
-            date: new Date().toISOString(),
-            message: message
-        };
-        
-        allData[currentMonthKey].logs.push(log);
-        saveData();
-    }
-
-    function showLogs() {
-        const logs = allData[currentMonthKey].logs;
-        const content = document.getElementById('logsContent');
-        
-        if (logs.length === 0) {
-            content.innerHTML = '<p>Nenhum log encontrado</p>';
-        } else {
-            content.innerHTML = logs.map(log => 
-                '<div class="log-item">' +
-                    '<div class="log-date">' + formatDate(log.date) + '</div>' +
-                    '<div class="log-message">' + escapeHtml(log.message) + '</div>' +
-                '</div>'
-            ).join('');
-        }
-        
-        document.getElementById('logsModal').style.display = 'flex';
-    }
-
-    function closeLogs(event) {
-        if (event.target.id === 'logsModal') {
-            closeLogsModal();
-        }
-    }
-
-    function closeLogsModal() {
-        document.getElementById('logsModal').style.display = 'none';
-    }
-
-    // ==================== UTILIDADES ====================
-    function saveData() {
-        try {
-            localStorage.setItem('futsalData', JSON.stringify(allData));
-        } catch (error) {
-            console.error('Erro ao salvar:', error);
-            showToast('Erro ao salvar dados', true);
-        }
-    }
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    function showToast(message, isError = false) {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.className = 'toast show' + (isError ? ' error' : '');
-        
-        setTimeout(function() {
-            toast.className = 'toast';
-        }, 3000);
-    }
-
-    function showInputError() {
-        const input = document.getElementById('playerName');
-        input.classList.add('error');
-        input.focus();
-        
-        setTimeout(function() {
-            input.classList.remove('error');
-        }, 500);
-    }
-
-    function getMonthKey(date) {
-        return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
-    }
-
-    function getMonthName(month) {
-        const names = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-                      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-        return names[month - 1];
-    }
-
-    function formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('pt-BR');
-    }
-
-    // ==================== EVENTOS ====================
-    document.getElementById('playerName').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            addPlayer();
-        }
-    });
-
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeLogsModal();
-        }
-    });
-
-    // Inicializa quando a página carregar
-    window.onload = init;
-</script>
         .month-nav button {
             width: 35px; /* Menor */
             height: 35px;
@@ -1044,8 +611,6 @@ Sistema de gestão de mensalidades de futsal
 
             .player-actions {
                 width: 100%;
-                justify.player-actions {
-                width: 100%;
                 justify-content: center;
             }
 
@@ -1077,15 +642,7 @@ Sistema de gestão de mensalidades de futsal
             </div>
             <div class="month-actions">
                 <button class="btn-month btn-copy" onclick="copyPlayersFromPreviousMonth()">
-                    📋 Copiar Jogadores
-                </button>
-                <button class="btn-month" onclick="createNewMonth()">
-                    + Novo Mês
-                </button>
-            </div>
-        </div>
-
-        <!-- Info Box -->
+                        <!-- Info Box -->
         <div class="info-box" id="infoBox" style="display: none;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -1345,6 +902,192 @@ Sistema de gestão de mensalidades de futsal
             renderAll();
         }
 
+        // ==================== AÇÕES DOS JOGADORES ====================
+        function addPlayer() {
+            const input = document.getElementById('playerName');
+            const name = input.value.trim();
+            
+            if (!name) {
+                showInputError();
+                return;
+            }
+            
+            // Verifica se já existe
+            const exists = allData[currentMonthKey].players.some(p => p.name.toLowerCase() === name.toLowerCase());
+            if (exists) {
+                showToast('Jogador já existe neste mês', true);
+                showInputError();
+                return;
+            }
+            
+            const player = {
+                id: Date.now(),
+                name: name,
+                paid: false,
+                lastPaymentDate: null,
+                copiedFrom: null
+            };
+            
+            allData[currentMonthKey].players.push(player);
+            addLog('Jogador adicionado: ' + name);
+            saveData();
+            renderAll();
+            
+            input.value = '';
+            showToast('Jogador adicionado com sucesso!');
+        }
+
+        function togglePayment(playerId) {
+            const player = allData[currentMonthKey].players.find(p => p.id === playerId);
+            if (!player) return;
+            
+            player.paid = !player.paid;
+            player.lastPaymentDate = player.paid ? new Date().toISOString() : null;
+            
+            addLog(player.name + ' ' + (player.paid ? 'pagou' : 'desmarcou pagamento'));
+            saveData();
+            renderAll();
+            
+            showToast(player.paid ? 'Pagamento confirmado!' : 'Pagamento desmarcado');
+        }
+
+        function removePlayer(playerId) {
+            const index = allData[currentMonthKey].players.findIndex(p => p.id === playerId);
+            if (index === -1) return;
+            
+            const player = allData[currentMonthKey].players[index];
+            allData[currentMonthKey].players.splice(index, 1);
+            
+            addLog('Jogador removido: ' + player.name);
+            saveData();
+            renderAll();
+            
+            showToast('Jogador removido');
+        }
+
+        // ==================== NAVEGAÇÃO DE MESES ====================
+        function navigateMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            currentMonthKey = getMonthKey(currentDate);
+            
+            if (!allData[currentMonthKey]) {
+                allData[currentMonthKey] = {
+                    players: [],
+                    logs: []
+                };
+            }
+            
+            checkCopiedPlayers();
+            updateMonthDisplay();
+            renderAll();
+        }
+
+        function createNewMonth() {
+            const nextMonth = new Date(currentDate);
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            const nextKey = getMonthKey(nextMonth);
+            
+            if (allData[nextKey]) {
+                showToast('Mês já existe', true);
+                return;
+            }
+            
+            allData[nextKey] = {
+                players: [],
+                logs: []
+            };
+            
+            addLog('Novo mês criado: ' + getMonthName(nextMonth.getMonth() + 1) + ' ' + nextMonth.getFullYear());
+            saveData();
+            
+            // Navega para o novo mês
+            currentDate = nextMonth;
+            currentMonthKey = nextKey;
+            updateMonthDisplay();
+            renderAll();
+            
+            showToast('Novo mês criado!');
+        }
+
+        function copyPlayersFromPreviousMonth() {
+            const prevMonth = new Date(currentDate);
+            prevMonth.setMonth(prevMonth.getMonth() - 1);
+            const prevKey = getMonthKey(prevMonth);
+            
+            if (!allData[prevKey] || allData[prevKey].players.length === 0) {
+                showToast('Nenhum jogador no mês anterior', true);
+                return;
+            }
+            
+            const copiedPlayers = allData[prevKey].players.map(player => ({
+                id: Date.now() + Math.random(),
+                name: player.name,
+                paid: false,
+                lastPaymentDate: null,
+                copiedFrom: prevKey
+            }));
+            
+            allData[currentMonthKey].players = copiedPlayers;
+            addLog('Jogadores copiados do mês anterior');
+            saveData();
+            renderAll();
+            
+            showToast('Jogadores copiados com sucesso!');
+        }
+
+        function checkCopiedPlayers() {
+            const players = allData[currentMonthKey].players;
+            players.forEach(player => {
+                if (player.copiedFrom) {
+                    const originalMonth = allData[player.copiedFrom];
+                    if (!originalMonth || !originalMonth.players.some(p => p.name === player.name)) {
+                        // Remove se o original foi deletado
+                        const index = players.indexOf(player);
+                        if (index > -1) players.splice(index, 1);
+                    }
+                }
+            });
+        }
+
+        // ==================== LOGS ====================
+        function addLog(message) {
+            const log = {
+                date: new Date().toISOString(),
+                message: message
+            };
+            
+            allData[currentMonthKey].logs.push(log);
+            saveData();
+        }
+
+        function showLogs() {
+            const logs = allData[currentMonthKey].logs;
+            const content = document.getElementById('logsContent');
+            
+            if (logs.length === 0) {
+                content.innerHTML = '<p>Nenhum log encontrado</p>';
+            } else {
+                content.innerHTML = logs.map(log => 
+                    '<div class="log-item">' +
+                        '<div class="log-date">' + formatDate(log.date) + '</div>' +
+                        '<div class="log-message">' + escapeHtml(log.message) + '</div>' +
+                    '</div>'
+                ).join('');
+            }
+            
+            document.getElementById('logsModal').style.display = 'flex';
+        }
+
+        function closeLogs(event) {
+            if (event.target.id === 'logsModal') {
+                closeLogsModal();
+            }
+        }
+
+        function closeLogsModal() {
+            document.getElementById('logsModal').style.display = 'none';
+        }
+
         // ==================== UTILIDADES ====================
         function saveData() {
             try {
@@ -1379,6 +1122,21 @@ Sistema de gestão de mensalidades de futsal
             setTimeout(function() {
                 input.classList.remove('error');
             }, 500);
+        }
+
+        function getMonthKey(date) {
+            return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+        }
+
+        function getMonthName(month) {
+            const names = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                          'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            return names[month - 1];
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+                        return date.toLocaleDateString('pt-BR');
         }
 
         // ==================== EVENTOS ====================
