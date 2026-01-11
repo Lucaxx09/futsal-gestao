@@ -119,7 +119,13 @@ Sistema de gestão de mensalidades de futsal
             text-align: center;
         }
 
-        .btn-new-month {
+        .month-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-month {
             background: var(--warning);
             color: white;
             border: none;
@@ -131,8 +137,16 @@ Sistema de gestão de mensalidades de futsal
             transition: all 0.2s;
         }
 
-        .btn-new-month:hover {
+        .btn-month:hover {
             background: #e65100;
+        }
+
+        .btn-copy {
+            background: var(--primary);
+        }
+
+        .btn-copy:hover {
+            background: var(--primary-dark);
         }
 
         /* Dashboard */
@@ -273,6 +287,11 @@ Sistema de gestão de mensalidades de futsal
             background: linear-gradient(90deg, #e8f5e9 0%, var(--card) 50%);
         }
 
+        .player-card.copied {
+            border-left-color: var(--warning);
+            background: linear-gradient(90deg, #fff3e0 0%, var(--card) 50%);
+        }
+
         .player-info {
             flex: 1;
         }
@@ -300,6 +319,10 @@ Sistema de gestão de mensalidades de futsal
 
         .player-card.paid .player-info .status .dot {
             background: var(--success);
+        }
+
+        .player-card.copied .player-info .status .dot {
+            background: var(--warning);
         }
 
         .player-actions {
@@ -510,7 +533,27 @@ Sistema de gestão de mensalidades de futsal
             background: var(--danger);
         }
 
-        /* Responsividade */
+        /* Info Box */
+        .info-box {
+            background: #e3f2fd;
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-box svg {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        /* Responsive */
         @media (max-width: 600px) {
             .dashboard {
                 grid-template-columns: repeat(2, 1fr);
@@ -523,6 +566,11 @@ Sistema de gestão de mensalidades de futsal
             .month-selector {
                 flex-direction: column;
                 gap: 15px;
+            }
+
+            .month-actions {
+                width: 100%;
+                justify-content: center;
             }
 
             .player-card {
@@ -562,7 +610,24 @@ Sistema de gestão de mensalidades de futsal
                 <span class="current-month" id="currentMonth">Carregando...</span>
                 <button onclick="navigateMonth(1)">&#8250;</button>
             </div>
-            <button class="btn-new-month" onclick="createNewMonth()">+ Novo Mês</button>
+            <div class="month-actions">
+                <button class="btn-month btn-copy" onclick="copyPlayersFromPreviousMonth()">
+                    📋 Copiar Jogadores
+                </button>
+                <button class="btn-month" onclick="createNewMonth()">
+                    + Novo Mês
+                </button>
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box" id="infoBox" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span id="infoText"></span>
         </div>
 
         <!-- Dashboard -->
@@ -677,8 +742,11 @@ Sistema de gestão de mensalidades de futsal
                         logs: []
                     };
                 }
-
-                // Atualiza display
+                
+                // Verifica se há jogadores copiados
+                checkCopiedPlayers();
+                
+       // Atualiza display
                 updateMonthDisplay();
                 
                 // Renderiza tudo
@@ -717,6 +785,12 @@ Sistema de gestão de mensalidades de futsal
             });
         }
 
+        function getPreviousMonthKey() {
+            const prevDate = new Date(currentDate);
+            prevDate.setMonth(prevDate.getMonth() - 1);
+            return getMonthKey(prevDate);
+        }
+
         // ==================== NAVEGAÇÃO ====================
         function navigateMonth(direction) {
             currentDate.setMonth(currentDate.getMonth() + direction);
@@ -729,6 +803,7 @@ Sistema de gestão de mensalidades de futsal
                 };
             }
             
+            checkCopiedPlayers();
             updateMonthDisplay();
             renderAll();
         }
@@ -746,6 +821,7 @@ Sistema de gestão de mensalidades de futsal
             const nextMonthKey = getMonthKey(nextMonth);
             const monthName = getMonthName(nextMonth.getMonth() + 1);
             
+            // Pergunta se quer criar novo mês
             if (confirm('Criar dados para ' + monthName + ' de ' + nextMonth.getFullYear() + '?')) {
                 currentDate = nextMonth;
                 currentMonthKey = nextMonthKey;
@@ -757,9 +833,93 @@ Sistema de gestão de mensalidades de futsal
                     };
                 }
                 
+                // Pergunta se quer copiar jogadores do mês anterior
+                const prevMonthKey = getPreviousMonthKey();
+                if (allData[prevMonthKey] && allData[prevMonthKey].players.length > 0) {
+                    if (confirm('Deseja copiar os jogadores do mês anterior para este novo mês?\n\n' +
+                                'Os jogadores serão adicionados com status "Pendente" de pagamento.')) {
+                        copyPlayersFromMonth(prevMonthKey);
+                    }
+                }
+                
                 updateMonthDisplay();
                 renderAll();
                 showToast('Mês criado com sucesso!');
+            }
+        }
+
+        // ==================== CÓPIA DE JOGADORES ====================
+        function copyPlayersFromPreviousMonth() {
+            const prevMonthKey = getPreviousMonthKey();
+            
+            if (!allData[prevMonthKey]) {
+                showToast('Não há dados do mês anterior', true);
+                return;
+            }
+            
+            const prevPlayers = allData[prevMonthKey].players;
+            
+            if (prevPlayers.length === 0) {
+                showToast('Não há jogadores no mês anterior', true);
+                return;
+            }
+            
+            if (confirm('Copiar ' + prevPlayers.length + ' jogadores do mês anterior?\n\n' +
+                        'Os jogadores serão adicionados com status "Pendente" de pagamento.')) {
+                copyPlayersFromMonth(prevMonthKey);
+                showToast(prevPlayers.length + ' jogadores copiados!');
+            }
+        }
+
+        function copyPlayersFromMonth(sourceMonthKey) {
+            const sourcePlayers = allData[sourceMonthKey].players;
+            const currentPlayers = allData[currentMonthKey].players;
+            
+            // Contador de jogadores copiados
+            let copiedCount = 0;
+            
+            sourcePlayers.forEach(sourcePlayer => {
+                // Verifica se o jogador já existe no mês atual
+                const alreadyExists = currentPlayers.some(cp => cp.name === sourcePlayer.name);
+                
+                if (!alreadyExists) {
+                    // Cria nova instância do jogador (não copia ID para permitir独立性)
+                    const newPlayer = {
+                        id: Date.now() + Math.random(), // ID único
+                        name: sourcePlayer.name,
+                        paid: false, // Sempre começa como não pago
+                        lastPaymentDate: null,
+                        copiedFrom: sourceMonthKey // Marca que foi copiado
+                    };
+                    
+                    currentPlayers.push(newPlayer);
+                    copiedCount++;
+                }
+            });
+            
+            if (copiedCount > 0) {
+                addLog(copiedCount + ' jogador(es) copiado(s) de ' + getMonthName(parseInt(sourceMonthKey.split('-')[1])) + '/' + sourceMonthKey.split('-')[0]);
+                checkCopiedPlayers();
+                saveData();
+                renderAll();
+            } else {
+                showToast('Todos os jogadores já estão cadastrados', true);
+            }
+        }
+
+        function checkCopiedPlayers() {
+            const infoBox = document.getElementById('infoBox');
+            const infoText = document.getElementById('infoText');
+            const players = allData[currentMonthKey].players;
+            
+            // Verifica se há jogadores copiados
+            const copiedPlayers = players.filter(p => p.copiedFrom);
+            
+            if (copiedPlayers.length > 0) {
+                infoBox.style.display = 'flex';
+                infoText.textContent = copiedPlayers.length + ' jogador(es) copiado(s) do mês anterior. Não se esqueça de atualizar os pagamentos!';
+            } else {
+                infoBox.style.display = 'none';
             }
         }
 
@@ -774,6 +934,17 @@ Sistema de gestão de mensalidades de futsal
                 return;
             }
 
+            const currentPlayers = allData[currentMonthKey].players;
+            
+            // Verifica se já existe
+            const alreadyExists = currentPlayers.some(p => p.name.toLowerCase() === name.toLowerCase());
+            if (alreadyExists) {
+                showToast('Este jogador já está cadastrado', true);
+                input.classList.add('error');
+                setTimeout(() => input.classList.remove('error'), 500);
+                return;
+            }
+
             const newPlayer = {
                 id: Date.now(),
                 name: name,
@@ -781,7 +952,7 @@ Sistema de gestão de mensalidades de futsal
                 lastPaymentDate: null
             };
 
-            allData[currentMonthKey].players.push(newPlayer);
+            currentPlayers.push(newPlayer);
             addLog('Jogador adicionado: ' + name);
             
             input.value = '';
@@ -789,7 +960,6 @@ Sistema de gestão de mensalidades de futsal
             renderAll();
             showToast('Jogador adicionado!');
             
-            // Foca no input para adicionar mais
             input.focus();
         }
 
@@ -911,13 +1081,19 @@ Sistema de gestão de mensalidades de futsal
                 return;
             }
 
-            list.innerHTML = players.map(player => 
-                '<div class="player-card ' + (player.paid ? 'paid' : '') + '">' +
+            list.innerHTML = players.map(player => {
+                const isCopied = player.copiedFrom ? true : false;
+                const cardClass = 'player-card ' + (player.paid ? 'paid' : '') + (isCopied ? ' copied' : '');
+                const statusText = player.paid 
+                    ? 'Pago em ' + formatDate(player.lastPaymentDate)
+                    : (isCopied ? 'Pendente (copiado)' : 'Pendente');
+                
+                return '<div class="' + cardClass + '">' +
                     '<div class="player-info">' +
                         '<strong>' + escapeHtml(player.name) + '</strong>' +
                         '<span class="status">' +
                             '<span class="dot"></span>' +
-                            (player.paid ? 'Pago em ' + formatDate(player.lastPaymentDate) : 'Pendente') +
+                            statusText +
                         '</span>' +
                     '</div>' +
                     '<div class="player-actions">' +
@@ -927,8 +1103,8 @@ Sistema de gestão de mensalidades de futsal
                         '</button>' +
                         '<button class="btn btn-remove" onclick="removePlayer(' + player.id + ')">X</button>' +
                     '</div>' +
-                '</div>'
-            ).join('');
+                '</div>';
+            }).join('');
         }
 
         function renderHistory() {
@@ -977,6 +1153,7 @@ Sistema de gestão de mensalidades de futsal
                 };
             }
             
+            checkCopiedPlayers();
             updateMonthDisplay();
             renderAll();
         }
