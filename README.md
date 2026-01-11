@@ -149,7 +149,7 @@ Sistema de gestão de mensalidades de futsal
             background: var(--primary-dark);
         }
 
-        /* Dashboard - Simplificado: apenas 3 cards essenciais */
+        /* Dashboard - Simplificado: apenas 3 cards essenciais, sem full-width */
         .dashboard {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -604,4 +604,61 @@ Sistema de gestão de mensalidades de futsal
             }
 
             .player-card {
-                flex-direction
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+
+            .player-actions {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .add-form .input-row {
+                flex-direction: column;
+            }
+
+            .btn-add {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>⚽ Gestão Futsal</h1>
+            <p>Mensalidade: R$ 30,00 | Aluguel: R$ 220,00</p>
+        </header>
+
+        <!-- Seleção de Mês -->
+        <div class="month-selector">
+            <div class="month-nav">
+                <button onclick="navigateMonth(-1)">&#8249;</button>
+                <span class="current-month" id="currentMonth">Carregando...</span>
+                <button onclick="navigateMonth(1)">&#8250;</button>
+            </div>
+            <div class="month-actions">
+                <button class="btn-month btn-copy" onclick="copyPlayersFromPreviousMonth()">
+                    📋 Copiar Jogadores
+                </button>
+                <button class="btn-month" onclick="createNewMonth()">
+                    + Novo Mês
+                </button>
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box" id="infoBox" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span id="infoText"></span>
+        </div>
+
+        <!-- Dashboard - Simplificado: apenas 3 cards essenciais -->
+        <div class="
