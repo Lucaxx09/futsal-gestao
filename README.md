@@ -1,44 +1,48 @@
 # futsal-gestao
 Sistema de gestão de mensalidades de futsal
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão Futsal - Controle de Mensalidades</title>
+    <title>⚽ Gestão Futsal - Controle de Mensalidades</title>
     <style>
+        /* Reset e Variáveis */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
             --primary: #1565c0;
             --primary-dark: #0d47a1;
-            --secondary: #43a047;
-            --danger: #e53935;
-            --warning: #f57c00;
-            --bg: #f0f2f5;
-            --card-bg: #ffffff;
+            --success: #2e7d32;
+            --success-light: #4caf50;
+            --danger: #c62828;
+            --danger-light: #e53935;
+            --warning: #ef6c00;
+            --bg: #f5f7fa;
+            --card: #ffffff;
             --text: #212121;
-            --text-secondary: #757575;
+            --text-light: #757575;
             --border: #e0e0e0;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             background-color: var(--bg);
             color: var(--text);
-            line-height: 1.6;
+            min-height: 100vh;
             padding-bottom: 40px;
         }
 
+        /* Container Principal */
         .container {
-            max-width: 900px;
+            max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 0 15px;
         }
 
         /* Header */
@@ -46,27 +50,27 @@ Sistema de gestão de mensalidades de futsal
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             padding: 25px 20px;
+            margin-bottom: 20px;
             border-radius: 0 0 20px 20px;
-            margin-bottom: 25px;
             box-shadow: 0 4px 15px rgba(21, 101, 192, 0.3);
         }
 
         header h1 {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             margin-bottom: 5px;
         }
 
         header p {
             opacity: 0.9;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
-        /* Month Selector */
+        /* Seleção de Mês */
         .month-selector {
-            background: var(--card-bg);
+            background: var(--card);
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: var(--shadow);
             margin-bottom: 20px;
             display: flex;
             flex-wrap: wrap;
@@ -75,13 +79,13 @@ Sistema de gestão de mensalidades de futsal
             justify-content: space-between;
         }
 
-        .month-controls {
+        .month-nav {
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .month-controls button {
+        .month-nav button {
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -91,18 +95,27 @@ Sistema de gestão de mensalidades de futsal
             font-size: 1.2rem;
             cursor: pointer;
             transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .month-controls button:hover {
+        .month-nav button:hover {
             background: var(--primary-dark);
             transform: scale(1.1);
         }
 
+        .month-nav button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .current-month {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: 600;
             color: var(--primary);
-            min-width: 200px;
+            min-width: 180px;
             text-align: center;
         }
 
@@ -110,10 +123,11 @@ Sistema de gestão de mensalidades de futsal
             background: var(--warning);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 10px 18px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 500;
+            font-size: 0.9rem;
             transition: all 0.2s;
         }
 
@@ -121,69 +135,74 @@ Sistema de gestão de mensalidades de futsal
             background: #e65100;
         }
 
-        /* Dashboard Cards */
+        /* Dashboard */
         .dashboard {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
-        .card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        .dashboard .card {
+            background: var(--card);
+            padding: 18px 15px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
             text-align: center;
-            transition: transform 0.2s;
         }
 
-        .card:hover {
-            transform: translateY(-3px);
-        }
-
-        .card h3 {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
+        .dashboard .card h3 {
+            font-size: 0.75rem;
+            color: var(--text-light);
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            margin-bottom: 8px;
         }
 
-        .card .value {
-            font-size: 1.5rem;
+        .dashboard .card .value {
+            font-size: 1.4rem;
             font-weight: 700;
             color: var(--primary);
         }
 
-        .card .value.positive { color: var(--secondary); }
-        .card .value.negative { color: var(--danger); }
-        .card .value.neutral { color: var(--warning); }
+        .dashboard .card .value.success { color: var(--success); }
+        .dashboard .card .value.danger { color: var(--danger); }
+        .dashboard .card .value.warning { color: var(--warning); }
 
-        /* Section Titles */
-        .section-title {
-            font-size: 1.1rem;
-            color: var(--text);
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--primary);
+        .dashboard .card.full-width {
+            grid-column: span 3;
+        }
+
+        /* Título de Seção */
+        .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
         }
 
-        /* Forms */
-        .input-group {
-            background: var(--card-bg);
+        .section-header h2 {
+            font-size: 1.1rem;
+            color: var(--text);
+        }
+
+        /* Formulário de Adição */
+        .add-form {
+            background: var(--card);
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
         }
 
-        .input-group input {
+        .add-form .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .add-form input {
             flex: 1;
             padding: 12px 15px;
             border: 2px solid var(--border);
@@ -192,13 +211,24 @@ Sistema de gestão de mensalidades de futsal
             transition: border-color 0.2s;
         }
 
-        .input-group input:focus {
+        .add-form input:focus {
             outline: none;
             border-color: var(--primary);
         }
 
+        .add-form input.error {
+            border-color: var(--danger);
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
         .btn-add {
-            background: var(--secondary);
+            background: var(--success);
             color: white;
             border: none;
             padding: 12px 25px;
@@ -207,13 +237,14 @@ Sistema de gestão de mensalidades de futsal
             font-weight: 600;
             font-size: 1rem;
             transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .btn-add:hover {
-            background: #2e7d32;
+            background: var(--success-light);
         }
 
-        /* Player List */
+        /* Lista de Jogadores */
         .player-list {
             display: flex;
             flex-direction: column;
@@ -222,24 +253,24 @@ Sistema de gestão de mensalidades de futsal
         }
 
         .player-card {
-            background: var(--card-bg);
+            background: var(--card);
             padding: 15px 20px;
             border-radius: 10px;
+            box-shadow: var(--shadow);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            border-left: 4px solid var(--danger);
+            border-left: 4px solid var(--danger-light);
             transition: all 0.2s;
         }
 
         .player-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
         }
 
         .player-card.paid {
-            border-left-color: var(--secondary);
-            background: linear-gradient(90deg, #e8f5e9 0%, var(--card-bg) 100%);
+            border-left-color: var(--success);
+            background: linear-gradient(90deg, #e8f5e9 0%, var(--card) 50%);
         }
 
         .player-info {
@@ -254,30 +285,30 @@ Sistema de gestão de mensalidades de futsal
 
         .player-info .status {
             font-size: 0.85rem;
-            color: var(--text-secondary);
+            color: var(--text-light);
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
         }
 
         .player-info .status .dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: var(--danger);
+            background: var(--danger-light);
         }
 
         .player-card.paid .player-info .status .dot {
-            background: var(--secondary);
+            background: var(--success);
         }
 
-        .actions {
+        .player-actions {
             display: flex;
             gap: 8px;
         }
 
         .btn {
-            padding: 8px 15px;
+            padding: 8px 14px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
@@ -287,12 +318,12 @@ Sistema de gestão de mensalidades de futsal
         }
 
         .btn-pay {
-            background: var(--secondary);
+            background: var(--success);
             color: white;
         }
 
         .btn-pay:hover {
-            background: #2e7d32;
+            background: var(--success-light);
         }
 
         .btn-unpay {
@@ -301,30 +332,29 @@ Sistema de gestão de mensalidades de futsal
         }
 
         .btn-unpay:hover {
-            background: #e65100;
+            background: #ef6c00;
         }
 
-        .btn-delete {
+        .btn-remove {
             background: #ffebee;
             color: var(--danger);
         }
 
-        .btn-delete:hover {
+        .btn-remove:hover {
             background: var(--danger);
             color: white;
         }
 
-        /* History Section */
+        /* Histórico */
         .history-section {
-            background: var(--card-bg);
+            background: var(--card);
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            margin-top: 25px;
+            box-shadow: var(--shadow);
         }
 
         .history-list {
-            max-height: 400px;
+            max-height: 300px;
             overflow-y: auto;
         }
 
@@ -346,24 +376,42 @@ Sistema de gestão de mensalidades de futsal
             border-bottom: none;
         }
 
+        .history-item.active {
+            background: #e3f2fd;
+        }
+
         .history-month {
             font-weight: 600;
         }
 
-        .history-details {
+        .history-stats {
             text-align: right;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
+            font-size: 0.85rem;
+            color: var(--text-light);
         }
 
         .history-profit {
             font-weight: 600;
-            color: var(--secondary);
+            color: var(--success);
         }
 
         .history-loss {
             font-weight: 600;
             color: var(--danger);
+        }
+
+        /* Estado Vazio */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+            opacity: 0.4;
         }
 
         /* Modal */
@@ -382,25 +430,13 @@ Sistema de gestão de mensalidades de futsal
         }
 
         .modal {
-            background: var(--card-bg);
+            background: var(--card);
             padding: 25px;
             border-radius: 15px;
             width: 100%;
             max-width: 500px;
             max-height: 80vh;
             overflow-y: auto;
-            animation: modalSlide 0.3s ease;
-        }
-
-        @keyframes modalSlide {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         .modal-header {
@@ -414,7 +450,7 @@ Sistema de gestão de mensalidades de futsal
 
         .modal-header h2 {
             color: var(--primary);
-            font-size: 1.3rem;
+            font-size: 1.2rem;
         }
 
         .close-modal {
@@ -422,8 +458,8 @@ Sistema de gestão de mensalidades de futsal
             border: none;
             font-size: 1.8rem;
             cursor: pointer;
-            color: var(--text-secondary);
-            transition: color 0.2s;
+            color: var(--text-light);
+            line-height: 1;
         }
 
         .close-modal:hover {
@@ -431,7 +467,7 @@ Sistema de gestão de mensalidades de futsal
         }
 
         .log-item {
-            padding: 12px 0;
+            padding: 10px 0;
             border-bottom: 1px solid var(--border);
         }
 
@@ -441,30 +477,49 @@ Sistema de gestão de mensalidades de futsal
 
         .log-date {
             font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
+            color: var(--text-light);
+            margin-bottom: 3px;
         }
 
         .log-message {
             font-size: 0.95rem;
         }
 
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-secondary);
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 2000;
         }
 
-        .empty-state svg {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 15px;
-            opacity: 0.5;
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
         }
 
-        /* Responsive */
+        .toast.error {
+            background: var(--danger);
+        }
+
+        /* Responsividade */
         @media (max-width: 600px) {
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dashboard .card.full-width {
+                grid-column: span 2;
+            }
+
             .month-selector {
                 flex-direction: column;
                 gap: 15px;
@@ -476,12 +531,12 @@ Sistema de gestão de mensalidades de futsal
                 text-align: center;
             }
 
-            .actions {
+            .player-actions {
                 width: 100%;
                 justify-content: center;
             }
 
-            .input-group {
+            .add-form .input-row {
                 flex-direction: column;
             }
 
@@ -493,246 +548,490 @@ Sistema de gestão de mensalidades de futsal
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>⚽ Gestão Futsal</h1>
-        <p>Controle de Mensalidades e Aluguel</p>
-    </header>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>⚽ Gestão Futsal</h1>
+            <p>Mensalidade: R$ 30,00 | Aluguel: R$ 220,00</p>
+        </header>
 
-    <!-- Month Selector -->
-    <div class="month-selector">
-        <div class="month-controls">
-            <button onclick="changeMonth(-1)">◀</button>
-            <span class="current-month" id="currentMonth">Janeiro 2025</span>
-            <button onclick="changeMonth(1)">▶</button>
+        <!-- Seleção de Mês -->
+        <div class="month-selector">
+            <div class="month-nav">
+                <button onclick="navigateMonth(-1)">&#8249;</button>
+                <span class="current-month" id="currentMonth">Carregando...</span>
+                <button onclick="navigateMonth(1)">&#8250;</button>
+            </div>
+            <button class="btn-new-month" onclick="createNewMonth()">+ Novo Mês</button>
         </div>
-        <button class="btn-new-month" onclick="createNewMonth()">+ Novo Mês</button>
-    </div>
 
-    <!-- Dashboard -->
-    <div class="dashboard">
-        <div class="card">
-            <h3>Jogadores</h3>
-            <div class="value" id="totalPlayers">0</div>
+        <!-- Dashboard -->
+        <div class="dashboard">
+            <div class="card">
+                <h3>Total</h3>
+                <div class="value" id="totalPlayers">0</div>
+            </div>
+            <div class="card">
+                <h3>Pagos</h3>
+                <div class="value success" id="paidPlayers">0</div>
+            </div>
+            <div class="card">
+                <h3>Pendentes</h3>
+                <div class="value warning" id="pendingPlayers">0</div>
+            </div>
+            <div class="card">
+                <h3>Arrecadado</h3>
+                <div class="value" id="totalCollected">R$ 0</div>
+            </div>
+            <div class="card">
+                <h3>Aluguel</h3>
+                <div class="value danger">-R$ 220</div>
+            </div>
+            <div class="card full-width">
+                <h3>Líquido (Arrecadação - Aluguel)</h3>
+                <div class="value" id="netProfit">R$ 0</div>
+            </div>
         </div>
-        <div class="card">
-            <h3>Pagos</h3>
-            <div class="value positive" id="paidPlayers">0</div>
-        </div>
-        <div class="card">
-            <h3>Arrecadação</h3>
-            <div class="value" id="totalCollected">R$ 0</div>
-        </div>
-        <div class="card">
-            <h3>Aluguel</h3>
-            <div class="value negative">-R$ 220</div>
-        </div>
-        <div class="card">
-            <h3>Líquido</h3>
-            <div class="value" id="netProfit">R$ 0</div>
-        </div>
-    </div>
 
-    <!-- Add Player -->
-    <div class="section-title">Jogadores do Mês</div>
-    <div class="input-group">
-        <input type="text" id="playerName" placeholder="Nome do jogador" onkeypress="handleKeyPress(event)">
-        <button class="btn-add" onclick="addPlayer()">+ Adicionar</button>
-    </div>
-
-    <!-- Player List -->
-    <div class="player-list" id="playerList">
-        <div class="empty-state">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
-            <p>Nenhum jogador cadastrado neste mês</p>
+        <!-- Formulário de Adição -->
+        <div class="section-header">
+            <h2>Jogadores</h2>
         </div>
-    </div>
-
-    <!-- History Section -->
-    <div class="history-section">
-        <div class="section-title">
-            📅 Histórico de Meses
-            <button class="btn" style="background: var(--primary); color: white;" onclick="openLogsModal()">Ver Logs</button>
+        
+        <div class="add-form">
+            <div class="input-row">
+                <input type="text" id="playerName" placeholder="Digite o nome do jogador..." autocomplete="off">
+                <button class="btn-add" onclick="addPlayer()">+ Adicionar</button>
+            </div>
         </div>
-        <div class="history-list" id="historyList">
+
+        <!-- Lista de Jogadores -->
+        <div class="player-list" id="playerList">
             <div class="empty-state">
-                <p>Nenhum histórico encontrado</p>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <p>Nenhum jogador cadastrado neste mês</p>
+            </div>
+        </div>
+
+        <!-- Histórico -->
+        <div class="history-section">
+            <div class="section-header">
+                <h2>📅 Histórico de Meses</h2>
+                <button class="btn" style="background: var(--primary); color: white;" onclick="showLogs()">Ver Logs</button>
+            </div>
+            <div class="history-list" id="historyList">
+                <div class="empty-state">
+                    <p>Nenhum histórico encontrado</p>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal Extrato -->
-<div class="modal-overlay" id="logsModal">
-    <div class="modal">
-        <div class="modal-header">
-            <h2>📊 Extrato de Movimentações</h2>
-            <button class="close-modal" onclick="closeLogsModal()">×</button>
+    <!-- Modal de Logs -->
+    <div class="modal-overlay" id="logsModal" onclick="closeLogs(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>📊 Extrato de Movimentações</h2>
+                <button class="close-modal" onclick="closeLogsModal()">&times;</button>
+            </div>
+            <div id="logsContent"></div>
         </div>
-        <div id="logsContent"></div>
     </div>
-</div>
 
-<script>
-    // ==================== CONFIGURAÇÕES ====================
-    const MONTHLY_FEE = 30;
-    const GYM_RENT = 220;
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
 
-    // ==================== ESTADO DA APLICAÇÃO ====================
-    let currentDate = new Date();
-    let allData = JSON.parse(localStorage.getItem('futsalData')) || {};
-    let currentMonthKey = getMonthKey(currentDate);
+    <script>
+        // ==================== CONFIGURAÇÕES ====================
+        const CONFIG = {
+            MONTHLY_FEE: 30,
+            GYM_RENT: 220
+        };
 
-    // ==================== INICIALIZAÇÃO ====================
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeMonth();
-        render();
-    });
+        // ==================== ESTADO ====================
+        let currentDate = new Date();
+        let currentMonthKey = '';
+        let allData = {};
 
-    // ==================== FUNÇÕES DE DATA ====================
-    function getMonthKey(date) {
-        const year = date.getFullYear();
-        const month = date.getMonth() + 1;
-        return `${year}-${month.toString().padStart(2, '0')}`;
-    }
+        // ==================== INICIALIZAÇÃO ====================
+        function init() {
+            try {
+                // Carrega dados do localStorage
+                const savedData = localStorage.getItem('futsalData');
+                if (savedData) {
+                    allData = JSON.parse(savedData);
+                }
 
-    function getMonthName(monthNumber) {
-        const months = [
-            'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-        ];
-        return months[monthNumber - 1];
-    }
+                // Define mês atual
+                currentMonthKey = getMonthKey(currentDate);
+                
+                // Inicializa mês se não existir
+                if (!allData[currentMonthKey]) {
+                    allData[currentMonthKey] = {
+                        players: [],
+                        logs: []
+                    };
+                }
 
-    function formatDate(dateString) {
-        const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
-        return new Date(dateString).toLocaleDateString('pt-BR', options);
-    }
+                // Atualiza display
+                updateMonthDisplay();
+                
+                // Renderiza tudo
+                renderAll();
 
-    // ==================== NAVEGAÇÃO DE MESES ====================
-    function changeMonth(direction) {
-        currentDate.setMonth(currentDate.getMonth() + direction);
-        currentMonthKey = getMonthKey(currentDate);
-        initializeMonth();
-        render();
-    }
-
-    function initializeMonth() {
-        if (!allData[currentMonthKey]) {
-            allData[currentMonthKey] = {
-                players: [],
-                logs: [],
-                archived: false
-            };
-            saveData();
+                console.log('Sistema inicializado com sucesso!');
+            } catch (error) {
+                console.error('Erro na inicialização:', error);
+                showToast('Erro ao carregar dados', true);
+            }
         }
-        updateMonthDisplay();
-    }
 
-    function updateMonthDisplay() {
-        const monthName = getMonthName(currentDate.getMonth() + 1);
-        const year = currentDate.getFullYear();
-        document.getElementById('currentMonth').textContent = `${monthName} ${year}`;
-    }
+        // ==================== FUNÇÕES DE DATA ====================
+        function getMonthKey(date) {
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            return year + '-' + month.toString().padStart(2, '0');
+        }
 
-    function createNewMonth() {
-        const nextMonth = new Date(currentDate);
-        nextMonth.setMonth(nextMonth.getMonth() + 1);
-        
-        if (confirm(`Criar dados para ${getMonthName(nextMonth.getMonth() + 1)} de ${nextMonth.getFullYear()}?`)) {
-            currentDate = nextMonth;
+        function getMonthName(monthNumber) {
+            const months = [
+                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+            ];
+            return months[monthNumber - 1];
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // ==================== NAVEGAÇÃO ====================
+        function navigateMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
             currentMonthKey = getMonthKey(currentDate);
-            initializeMonth();
-            render();
+            
+            if (!allData[currentMonthKey]) {
+                allData[currentMonthKey] = {
+                    players: [],
+                    logs: []
+                };
+            }
+            
+            updateMonthDisplay();
+            renderAll();
         }
-    }
 
-    // ==================== GERENCIAMENTO DE JOGADORES ====================
-    function addPlayer() {
-        const nameInput = document.getElementById('playerName');
-        const name = nameInput.value.trim();
-        
-        if (name) {
+        function updateMonthDisplay() {
+            const monthName = getMonthName(currentDate.getMonth() + 1);
+            const year = currentDate.getFullYear();
+            document.getElementById('currentMonth').textContent = monthName + ' ' + year;
+        }
+
+        function createNewMonth() {
+            const nextMonth = new Date(currentDate);
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            
+            const nextMonthKey = getMonthKey(nextMonth);
+            const monthName = getMonthName(nextMonth.getMonth() + 1);
+            
+            if (confirm('Criar dados para ' + monthName + ' de ' + nextMonth.getFullYear() + '?')) {
+                currentDate = nextMonth;
+                currentMonthKey = nextMonthKey;
+                
+                if (!allData[currentMonthKey]) {
+                    allData[currentMonthKey] = {
+                        players: [],
+                        logs: []
+                    };
+                }
+                
+                updateMonthDisplay();
+                renderAll();
+                showToast('Mês criado com sucesso!');
+            }
+        }
+
+        // ==================== JOGADORES ====================
+        function addPlayer() {
+            const input = document.getElementById('playerName');
+            const name = input.value.trim();
+            
+            if (name === '') {
+                showInputError();
+                showToast('Digite o nome do jogador', true);
+                return;
+            }
+
             const newPlayer = {
                 id: Date.now(),
                 name: name,
                 paid: false,
                 lastPaymentDate: null
             };
-            
+
             allData[currentMonthKey].players.push(newPlayer);
-            addLog(`Jogador adicionado: ${name}`);
+            addLog('Jogador adicionado: ' + name);
             
-            nameInput.value = '';
+            input.value = '';
             saveData();
-            render();
-        } else {
-            highlightInput();
-        }
-    }
-
-    function handleKeyPress(event) {
-        if (event.key === 'Enter') {
-            addPlayer();
-        }
-    }
-
-    function togglePayment(playerId) {
-        const player = allData[currentMonthKey].players.find(p => p.id === playerId);
-        
-        if (player) {
-            player.paid = !player.paid;
-            player.lastPaymentDate = player.paid ? new Date().toISOString() : null;
+            renderAll();
+            showToast('Jogador adicionado!');
             
-            if (player.paid) {
-                addLog(`Pagamento recebido: ${player.name} (R$ ${MONTHLY_FEE})`);
+            // Foca no input para adicionar mais
+            input.focus();
+        }
+
+        function togglePayment(playerId) {
+            const player = allData[currentMonthKey].players.find(p => p.id === playerId);
+            
+            if (player) {
+                player.paid = !player.paid;
+                player.lastPaymentDate = player.paid ? new Date().toISOString() : null;
+                
+                if (player.paid) {
+                    addLog('Pagamento recebido: ' + player.name + ' (R$ ' + CONFIG.MONTHLY_FEE + ')');
+                    showToast(player.name + ' pagou R$ ' + CONFIG.MONTHLY_FEE);
+                } else {
+                    addLog('Pagamento estornado: ' + player.name);
+                    showToast('Pagamento estornado');
+                }
+                
+                saveData();
+                renderAll();
+            }
+        }
+
+        function removePlayer(playerId) {
+            const player = allData[currentMonthKey].players.find(p => p.id === playerId);
+            
+            if (player && confirm('Remover ' + player.name + ' da lista?')) {
+                addLog('Jogador removido: ' + player.name);
+                allData[currentMonthKey].players = allData[currentMonthKey].players.filter(p => p.id !== playerId);
+                saveData();
+                renderAll();
+                showToast('Jogador removido');
+            }
+        }
+
+        // ==================== LOGS ====================
+        function addLog(message) {
+            const log = {
+                date: new Date().toISOString(),
+                message: message
+            };
+            allData[currentMonthKey].logs.unshift(log);
+            saveData();
+        }
+
+        function showLogs() {
+            const logs = allData[currentMonthKey].logs;
+            const container = document.getElementById('logsContent');
+            
+            if (logs.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>Nenhuma movimentação neste mês</p></div>';
             } else {
-                addLog(`Pagamento estornado: ${player.name}`);
+                container.innerHTML = logs.map(log => 
+                    '<div class="log-item">' +
+                        '<div class="log-date">' + formatDate(log.date) + '</div>' +
+                        '<div class="log-message">' + escapeHtml(log.message) + '</div>' +
+                    '</div>'
+                ).join('');
             }
             
-            saveData();
-            render();
+            document.getElementById('logsModal').style.display = 'flex';
         }
-    }
 
-    function deletePlayer(playerId) {
-        const player = allData[currentMonthKey].players.find(p => p.id === playerId);
-        
-        if (player && confirm(`Remover ${player.name} da lista?`)) {
-            addLog(`Jogador removido: ${player.name}`);
-            allData[currentMonthKey].players = allData[currentMonthKey].players.filter(p => p.id !== playerId);
-            saveData();
-            render();
+        function closeLogsModal() {
+            document.getElementById('logsModal').style.display = 'none';
         }
-    }
 
-    // ==================== SISTEMA DE LOGS ====================
-    function addLog(message) {
-        const log = {
-            date: new Date().toISOString(),
-            message: message
-        };
-        allData[currentMonthKey].logs.unshift(log);
-        saveData();
-    }
+        function closeLogs(event) {
+            if (event.target.id === 'logsModal') {
+                closeLogsModal();
+            }
+        }
 
-    // ==================== RENDERIZAÇÃO ====================
-    function render() {
-        renderDashboard();
-        renderPlayerList();
-        renderHistory();
-    }
+        // ==================== RENDERIZAÇÃO ====================
+        function renderAll() {
+            renderDashboard();
+            renderPlayerList();
+            renderHistory();
+        }
 
-    function renderDashboard() {
-        const monthData = allData[currentMonthKey];
-        const players = monthData.players;
-        
-        const totalPlayers = players.length;
-        const paidPlayers = players.filter(p => p.paid).length;
-        const totalCollected = paidPlayers * MONTHLY_FEE;
-        const netProfit = totalCollected - G
+        function renderDashboard() {
+            const players = allData[currentMonthKey].players;
+            const totalPlayers = players.length;
+            const paidPlayers = players.filter(p => p.paid).length;
+            const pendingPlayers = totalPlayers - paidPlayers;
+            const totalCollected = paidPlayers * CONFIG.MONTHLY_FEE;
+            const netProfit = totalCollected - CONFIG.GYM_RENT;
+
+            document.getElementById('totalPlayers').textContent = totalPlayers;
+            document.getElementById('paidPlayers').textContent = paidPlayers;
+            document.getElementById('pendingPlayers').textContent = pendingPlayers;
+            document.getElementById('totalCollected').textContent = 'R$ ' + totalCollected;
+
+            const profitElement = document.getElementById('netProfit');
+            profitElement.textContent = 'R$ ' + netProfit;
+            
+            if (netProfit >= 0) {
+                profitElement.className = 'value success';
+            } else {
+                profitElement.className = 'value danger';
+            }
+        }
+
+        function renderPlayerList() {
+            const list = document.getElementById('playerList');
+            const players = allData[currentMonthKey].players;
+
+            if (players.length === 0) {
+                list.innerHTML = 
+                    '<div class="empty-state">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+                            '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>' +
+                            '<circle cx="9" cy="7" r="4"></circle>' +
+                            '<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>' +
+                            '<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>' +
+                        '</svg>' +
+                        '<p>Nenhum jogador cadastrado neste mês</p>' +
+                    '</div>';
+                return;
+            }
+
+            list.innerHTML = players.map(player => 
+                '<div class="player-card ' + (player.paid ? 'paid' : '') + '">' +
+                    '<div class="player-info">' +
+                        '<strong>' + escapeHtml(player.name) + '</strong>' +
+                        '<span class="status">' +
+                            '<span class="dot"></span>' +
+                            (player.paid ? 'Pago em ' + formatDate(player.lastPaymentDate) : 'Pendente') +
+                        '</span>' +
+                    '</div>' +
+                    '<div class="player-actions">' +
+                        '<button class="btn ' + (player.paid ? 'btn-unpay' : 'btn-pay') + '" ' +
+                                'onclick="togglePayment(' + player.id + ')">' +
+                            (player.paid ? 'Desmarcar' : 'Pago R$ 30') +
+                        '</button>' +
+                        '<button class="btn btn-remove" onclick="removePlayer(' + player.id + ')">X</button>' +
+                    '</div>' +
+                '</div>'
+            ).join('');
+        }
+
+        function renderHistory() {
+            const historyList = document.getElementById('historyList');
+            const sortedKeys = Object.keys(allData).sort().reverse();
+
+            if (sortedKeys.length === 0) {
+                historyList.innerHTML = '<div class="empty-state"><p>Nenhum histórico encontrado</p></div>';
+                return;
+            }
+
+            historyList.innerHTML = sortedKeys.map(key => {
+                const monthData = allData[key];
+                const [year, month] = key.split('-');
+                const paidCount = monthData.players.filter(p => p.paid).length;
+                const collected = paidCount * CONFIG.MONTHLY_FEE;
+                const profit = collected - CONFIG.GYM_RENT;
+                const isCurrentMonth = key === currentMonthKey;
+
+                return '<div class="history-item ' + (isCurrentMonth ? 'active' : '') + '" ' +
+                             'onclick="selectMonth(\'' + key + '\')" ' +
+                             'style="' + (isCurrentMonth ? 'background: #e3f2fd;' : '') + '">' +
+                    '<div class="history-month">' +
+                        getMonthName(parseInt(month)) + ' ' + year +
+                        (isCurrentMonth ? ' (Atual)' : '') +
+                    '</div>' +
+                    '<div class="history-stats">' +
+                        '<div>' + monthData.players.length + ' jogadores | ' + paidCount + ' pagos</div>' +
+                        '<div class="' + (profit >= 0 ? 'history-profit' : 'history-loss') + '">' +
+                            (profit >= 0 ? '+' : '') + 'R$ ' + profit +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function selectMonth(key) {
+            const [year, month] = key.split('-');
+            currentDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+            currentMonthKey = key;
+            
+            if (!allData[currentMonthKey]) {
+                allData[currentMonthKey] = {
+                    players: [],
+                    logs: []
+                };
+            }
+            
+            updateMonthDisplay();
+            renderAll();
+        }
+
+        // ==================== UTILIDADES ====================
+        function saveData() {
+            try {
+                localStorage.setItem('futsalData', JSON.stringify(allData));
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+                showToast('Erro ao salvar dados', true);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show' + (isError ? ' error' : '');
+            
+            setTimeout(function() {
+                toast.className = 'toast';
+            }, 3000);
+        }
+
+        function showInputError() {
+            const input = document.getElementById('playerName');
+            input.classList.add('error');
+            input.focus();
+            
+            setTimeout(function() {
+                input.classList.remove('error');
+            }, 500);
+        }
+
+        // ==================== EVENTOS ====================
+        document.getElementById('playerName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addPlayer();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLogsModal();
+            }
+        });
+
+        // Inicializa quando a página carregar
+        window.onload = init;
+    </script>
+</body>
+</html>
